@@ -397,13 +397,40 @@ module SemanticConventions =
 [<Extension>]
 type ActivityExtensions =
     [<Extension>]
-    static member inline AddBaggageSafe(span: Activity, key: string, value: string) =
+
+    /// <summary>
+    /// Add or update the Activity baggage with the input key and value.
+    ///
+    /// If the input value is null
+    ///     - if the collection has any baggage with the same key, then this baggage will get removed from the collection.
+    ///     - otherwise, nothing will happen and the collection will not change.
+    ///
+    /// If the input value is not null
+    ///     - if the collection has any baggage with the same key, then the value mapped to this key will get updated with the new input value.
+    ///     - otherwise, the key and value will get added as a new baggage to the collection.
+    ///
+    ///
+    /// https://docs.microsoft.com/en-us/dotnet/api/system.diagnostics.activity.setbaggage?view=net-6.0
+    /// </summary>
+    /// <param name="span">The activity to add the baggage to</param>
+    /// <param name="key">The baggage key name</param>
+    /// <param name="value">The baggage value mapped to the input key</param>
+    /// <returns><see langword="this" /> for convenient chaining.</returns>
+    static member inline SetBaggageSafe(span: Activity, key: string, value: string) =
         if span <> null then
             span.AddBaggage(key, value)
         else
             span
 
     [<Extension>]
+    /// <summary>
+    /// Add <see cref="ActivityEvent" /> object to the <see cref="Events" /> list.
+    ///
+    /// https://docs.microsoft.com/en-us/dotnet/api/system.diagnostics.activity.addevent?view=net-6.0
+    /// </summary>
+    /// <param name="span">The activity to add the baggage to</param>
+    /// <param name="e"> object of <see cref="ActivityEvent"/> to add to the attached events list.</param>
+    /// <returns><see langword="this" /> for convenient chaining.</returns>
     static member inline AddEventSafe(span: Activity, e: ActivityEvent) =
         if span <> null then
             span.AddEvent(e)
@@ -411,9 +438,21 @@ type ActivityExtensions =
             span
 
     [<Extension>]
-    static member inline AddEventSafe(span: Activity, e: string) = span.AddEventSafe(ActivityEvent e)
-
-    [<Extension>]
+    /// <summary>
+    /// Add or update the Activity tag with the input key and value.
+    ///
+    /// If the input value is null
+    ///     - if the collection has any tag with the same key, then this tag will get removed from the collection.
+    ///     - otherwise, nothing will happen and the collection will not change.
+    ///
+    /// If the input value is not null
+    ///     - if the collection has any tag with the same key, then the value mapped to this key will get updated with the new input value.
+    ///     - otherwise, the key and value will get added as a new tag to the collection.
+    /// </summary>
+    /// <param name="span">The activity to add the baggage to</param>
+    /// <param name="key">The tag key name</param>
+    /// <param name="value">The tag value mapped to the input key</param>
+    /// <returns><see langword="this" /> for convenient chaining.</returns>
     static member inline SetTagSafe(span: Activity, key, value: obj) =
         if span <> null then
             span.SetTag(key, value)
