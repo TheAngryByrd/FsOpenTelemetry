@@ -1,6 +1,51 @@
 # FsOpenTelemetry
 
-[Enter useful description for FsOpenTelemetry]
+## What is this?
+
+FsOpenTelemetry is a single file you can copy paste or add through [Paket Github dependencies](https://fsprojects.github.io/Paket/github-dependencies.html) to provide your F# library with safe helpers for Activity and ActivitySource.
+
+## Why does this exist?
+
+One of the [best practices](https://docs.microsoft.com/en-us/dotnet/core/diagnostics/distributed-tracing-instrumentation-walkthroughs#best-practices-2) from the Microsoft Distributed Tracing documentation states to use the `?.` since "`activity` returned by `ActivitySource.StartActivity` may be null".  Since F# does not have this operator you have to put `if activity <> null then doThing` everywhere.  This uses extensions methods on an existing [Activity](https://docs.microsoft.com/en-us/dotnet/api/system.diagnostics.activity?view=net-6.0) so calls are straight forward without doing the null checks.
+
+This additionally adds several additional helpers such as [RecordException](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/api.md#record-exception), [Adding many of the semantic conventions as constants](https://github.com/open-telemetry/opentelemetry-specification/tree/main/specification/trace/semantic_conventions), and automatically creating `Activity` with [Source Code attributes](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/span-general.md#source-code-attributes) filled out.
+
+## How do I get started?
+
+### 1. Put the file into your project
+
+#### Option 1
+
+Copy/paste [FsOpenTelemetry.fs](https://github.com/TheAngryByrd/FsOpenTelemetry/blob/master/src/FsOpenTelemetry/FsOpenTelemetry.fs) into your library.
+
+#### Option 2
+
+Read over [Paket Github dependencies](https://fsprojects.github.io/Paket/github-dependencies.html).
+
+Add the following line to your `paket.depedencies` file.
+
+```paket
+github TheAngryByrd/FsOpenTelemetry src/FsOpenTelemetry/FsOpenTelemetry.fs
+```
+
+Then add the following line to projects with `paket.references` file you want FsOpenTelemetry to be available to.
+
+```paket
+File: FsOpenTelemetry.fs
+```
+
+### 2. Replace its namespace with yours
+
+To alleviate potential naming conflicts, it's best to replace FsOpenTelemetry namespace with your own.
+
+Here is an example with FAKE 5:
+
+```fsharp
+Target.create "Replace" <| fun _ ->
+  Shell.replaceInFiles
+    [ "FsOpenTelemetry", "MyLib.DistributedTracing" ]
+    (!! "paket-files/TheAngryByrd/FsOpenTelemetry/src/FsOpenTelemetry/FsOpenTelemetry.fs")
+```
 
 ---
 
@@ -10,12 +55,6 @@ GitHub Actions |
 :---: |
 [![GitHub Actions](https://github.com/TheAngryByrd/FsOpenTelemetry/workflows/Build%20master/badge.svg)](https://github.com/TheAngryByrd/FsOpenTelemetry/actions?query=branch%3Amaster) |
 [![Build History](https://buildstats.info/github/chart/TheAngryByrd/FsOpenTelemetry)](https://github.com/TheAngryByrd/FsOpenTelemetry/actions?query=branch%3Amaster) |
-
-## NuGet 
-
-Package | Stable | Prerelease
---- | --- | ---
-FsOpenTelemetry | [![NuGet Badge](https://buildstats.info/nuget/FsOpenTelemetry)](https://www.nuget.org/packages/FsOpenTelemetry/) | [![NuGet Badge](https://buildstats.info/nuget/FsOpenTelemetry?includePreReleases=true)](https://www.nuget.org/packages/FsOpenTelemetry/)
 
 ---
 
