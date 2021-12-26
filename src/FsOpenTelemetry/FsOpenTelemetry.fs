@@ -417,7 +417,7 @@ type ActivityExtensions =
     /// <param name="value">The baggage value mapped to the input key</param>
     /// <returns><see langword="this" /> for convenient chaining.</returns>
     static member inline SetBaggageSafe(span: Activity, key: string, value: string) =
-        if span <> null then
+        if not isNull span then
             span.AddBaggage(key, value)
         else
             span
@@ -432,7 +432,7 @@ type ActivityExtensions =
     /// <param name="e"> object of <see cref="ActivityEvent"/> to add to the attached events list.</param>
     /// <returns><see langword="this" /> for convenient chaining.</returns>
     static member inline AddEventSafe(span: Activity, e: ActivityEvent) =
-        if span <> null then
+        if not isNull span then
             span.AddEvent(e)
         else
             span
@@ -454,7 +454,7 @@ type ActivityExtensions =
     /// <param name="value">The tag value mapped to the input key</param>
     /// <returns><see langword="this" /> for convenient chaining.</returns>
     static member inline SetTagSafe(span: Activity, key, value: obj) =
-        if span <> null then
+        if not isNull span then
             span.SetTag(key, value)
         else
             span
@@ -507,7 +507,7 @@ type ActivityExtensions =
 
     [<Extension>]
     static member inline RecordExceptions(span: Activity, e: exn, ?escaped: bool) =
-        if span <> null then
+        if not isNull span then
             let escaped = defaultArg escaped false
             let exceptionType = e.GetType().Name
             let exceptionStackTrace = e.ToString()
