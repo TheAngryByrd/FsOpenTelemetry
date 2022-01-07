@@ -11,6 +11,15 @@ open System.Collections.Generic
 [<MeasureAnnotatedAbbreviation>]
 type string<[<Measure>] 'm> = string
 
+
+module Funcs =
+    /// <summary>
+    /// Determines whether the given value is not null.
+    /// </summary>
+    /// <param name="value">The value to check</param>
+    /// <returns>True when value is not null, false otherwise.</returns>
+    let inline isNotNull value = value |> isNull |> not
+
 module private Unsafe =
     let inline cast<'a, 'b> (a: 'a) : 'b = (# "" a : 'b #)
 
@@ -417,7 +426,7 @@ type ActivityExtensions =
     /// <param name="value">The baggage value mapped to the input key</param>
     /// <returns><see langword="this" /> for convenient chaining.</returns>
     static member inline SetBaggageSafe(span: Activity, key: string, value: string) =
-        if not isNull span then
+        if not (isNull span) then
             span.AddBaggage(key, value)
         else
             span
@@ -432,7 +441,7 @@ type ActivityExtensions =
     /// <param name="e"> object of <see cref="ActivityEvent"/> to add to the attached events list.</param>
     /// <returns><see langword="this" /> for convenient chaining.</returns>
     static member inline AddEventSafe(span: Activity, e: ActivityEvent) =
-        if not isNull span then
+        if Funcs.isNotNull span then
             span.AddEvent(e)
         else
             span
@@ -454,7 +463,7 @@ type ActivityExtensions =
     /// <param name="value">The tag value mapped to the input key</param>
     /// <returns><see langword="this" /> for convenient chaining.</returns>
     static member inline SetTagSafe(span: Activity, key, value: obj) =
-        if not isNull span then
+        if Funcs.isNotNull span then
             span.SetTag(key, value)
         else
             span
@@ -507,7 +516,7 @@ type ActivityExtensions =
 
     [<Extension>]
     static member inline RecordExceptions(span: Activity, e: exn, ?escaped: bool) =
-        if not isNull span then
+        if Funcs.isNotNull span then
             let escaped = defaultArg escaped false
             let exceptionType = e.GetType().Name
             let exceptionStackTrace = e.ToString()
