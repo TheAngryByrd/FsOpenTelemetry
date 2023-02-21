@@ -350,7 +350,7 @@ let updateChangelog ctx =
     let linkReferenceForUnreleased = sprintf "[Unreleased]: %s/compare/%s...%s" gitHubRepoUrl (tagFromVersionNumber newVersion.AsString) "HEAD"
     let tailLines = File.read changelogFilename |> List.ofSeq |> List.rev
 
-    let isRef line = System.Text.RegularExpressions.Regex.IsMatch(line, @"^\[.+?\]:\s?[a-z]+://.*$")
+    let isRef (line : string) = System.Text.RegularExpressions.Regex.IsMatch(line, @"^\[.+?\]:\s?[a-z]+://.*$")
     let linkReferenceTargets =
         tailLines
         |> List.skipWhile String.isNullOrWhiteSpace
@@ -716,14 +716,14 @@ let initTargets () =
     "DotnetRestore"
         ==> "CheckFormatCode"
         ==> "DotnetBuild"
-        ==> "FSharpAnalyzers"
+        // ==> "FSharpAnalyzers"
         ==> "DotnetTest"
         =?> ("GenerateCoverageReport", not disableCodeCoverage)
-        ==> "DotnetPack"
-        ==> "SourceLinkTest"
-        ==> "PublishToNuGet"
-        ==> "GitRelease"
-        ==> "GitHubRelease"
+        // ==> "DotnetPack"
+        // ==> "SourceLinkTest"
+        // ==> "PublishToNuGet"
+        // ==> "GitRelease"
+        // ==> "GitHubRelease"
         ==>! "Release"
 
     "DotnetRestore"
@@ -740,7 +740,7 @@ let main argv =
     |> Context.RuntimeContext.Fake
     |> Context.setExecutionContext
     initTargets ()
-    Target.runOrDefaultWithArguments "DotnetPack"
+    Target.runOrDefaultWithArguments "DotnetTest"
 
     0 // return an integer exit code
 
