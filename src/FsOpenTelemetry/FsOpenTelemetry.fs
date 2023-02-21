@@ -6,7 +6,6 @@ open System.Runtime.CompilerServices
 open System.Collections.Generic
 
 
-
 // Thanks https://github.com/fsprojects/FSharp.UMX
 [<MeasureAnnotatedAbbreviation>]
 type string<[<Measure>] 'm> = string
@@ -18,7 +17,10 @@ module Funcs =
     /// </summary>
     /// <param name="value">The value to check</param>
     /// <returns>True when value is not null, false otherwise.</returns>
-    let inline isNotNull value = value |> isNull |> not
+    let inline isNotNull value =
+        value
+        |> isNull
+        |> not
 
 module private Unsafe =
     let inline cast<'a, 'b> (a: 'a) : 'b = (# "" a : 'b #)
@@ -26,7 +28,9 @@ module private Unsafe =
 type UMX =
     static member inline tag<[<Measure>] 'm>(x: string) : string<'m> = Unsafe.cast x
     static member inline untag<[<Measure>] 'm>(x: string<'m>) : string = Unsafe.cast x
-    static member inline cast<[<Measure>] 'm1, [<Measure>] 'm2>(x: string<'m1>) : string<'m2> = Unsafe.cast x
+
+    static member inline cast<[<Measure>] 'm1, [<Measure>] 'm2>(x: string<'m1>) : string<'m2> =
+        Unsafe.cast x
 
 /// In OpenTelemetry spans can be created freely and it’s up to the implementor to annotate them with attributes specific to the represented operation. Spans represent specific operations in and between systems. Some of these operations represent calls that use well-known protocols like HTTP or database calls. Depending on the protocol and the type of operation, additional information is needed to represent and analyze a span correctly in monitoring systems. It is also important to unify how this attribution is made in different languages. This way, the operator will not need to learn specifics of a language and telemetry collected from polyglot (multi-language) micro-service environments can still be easily correlated and cross-analyzed.
 module SemanticConventions =
@@ -51,6 +55,7 @@ module SemanticConventions =
             /// net.transport MUST be one of the following
             [<Measure>]
             type net_transport_values
+
             /// tcp_ip
             let net_transport_values_ip_tcp: string<net_transport_values> = UMX.tag "icp_tcp"
             /// ip_udp
@@ -127,6 +132,7 @@ module SemanticConventions =
             // TODO: "See Note below"
             [<Literal>]
             let net_host_name = "net.host.name"
+
             /// The internet connection type currently being used by the host.
             ///
             /// ValueType: string
@@ -141,14 +147,20 @@ module SemanticConventions =
             [<Measure>]
             type net_host_connection_type_values
 
-            let net_host_connection_type_values_wifi: string<net_host_connection_type_values> = UMX.tag "wifi"
-            let net_host_connection_type_values_wired: string<net_host_connection_type_values> = UMX.tag "wired"
-            let net_host_connection_type_values_cell: string<net_host_connection_type_values> = UMX.tag "cell"
+            let net_host_connection_type_values_wifi: string<net_host_connection_type_values> =
+                UMX.tag "wifi"
+
+            let net_host_connection_type_values_wired: string<net_host_connection_type_values> =
+                UMX.tag "wired"
+
+            let net_host_connection_type_values_cell: string<net_host_connection_type_values> =
+                UMX.tag "cell"
 
             let net_host_connection_type_values_unavailable: string<net_host_connection_type_values> =
                 UMX.tag "unavailable"
 
-            let net_host_connection_type_values_unknown: string<net_host_connection_type_values> = UMX.tag "unknown"
+            let net_host_connection_type_values_unknown: string<net_host_connection_type_values> =
+                UMX.tag "unknown"
 
 
             /// This describes more details regarding the connection.type. It may be the type of cell technology connection, but it could be used for describing details about a wifi connection.
@@ -166,30 +178,60 @@ module SemanticConventions =
             type net_host_connection_subtype_values
 
 
-            let net_host_connection_subtype_values_gprs: string<net_host_connection_type_values> = UMX.tag "gprs"
-            let net_host_connection_subtype_values_edge: string<net_host_connection_type_values> = UMX.tag "edge"
-            let net_host_connection_subtype_values_umts: string<net_host_connection_type_values> = UMX.tag "umts"
-            let net_host_connection_subtype_values_cdma: string<net_host_connection_type_values> = UMX.tag "cdma"
-            let net_host_connection_subtype_values_evdo_0: string<net_host_connection_type_values> = UMX.tag "evdo_0"
-            let net_host_connection_subtype_values_evdo_a: string<net_host_connection_type_values> = UMX.tag "evdo_a"
+            let net_host_connection_subtype_values_gprs: string<net_host_connection_type_values> =
+                UMX.tag "gprs"
 
-            let net_host_connection_subtype_values_cdma2000_1xrtt: string<net_host_connection_type_values> =
+            let net_host_connection_subtype_values_edge: string<net_host_connection_type_values> =
+                UMX.tag "edge"
+
+            let net_host_connection_subtype_values_umts: string<net_host_connection_type_values> =
+                UMX.tag "umts"
+
+            let net_host_connection_subtype_values_cdma: string<net_host_connection_type_values> =
+                UMX.tag "cdma"
+
+            let net_host_connection_subtype_values_evdo_0: string<net_host_connection_type_values> =
+                UMX.tag "evdo_0"
+
+            let net_host_connection_subtype_values_evdo_a: string<net_host_connection_type_values> =
+                UMX.tag "evdo_a"
+
+            let net_host_connection_subtype_values_cdma2000_1xrtt
+                : string<net_host_connection_type_values> =
                 UMX.tag "cdma2000_1xrtt"
 
-            let net_host_connection_subtype_values_hsdpa: string<net_host_connection_type_values> = UMX.tag "hsdpa"
-            let net_host_connection_subtype_values_hsupa: string<net_host_connection_type_values> = UMX.tag "hsupa"
-            let net_host_connection_subtype_values_iden: string<net_host_connection_type_values> = UMX.tag "iden"
-            let net_host_connection_subtype_values_ehrpd: string<net_host_connection_type_values> = UMX.tag "ehrpd"
-            let net_host_connection_subtype_values_hspap: string<net_host_connection_type_values> = UMX.tag "hspap"
-            let net_host_connection_subtype_values_gsm: string<net_host_connection_type_values> = UMX.tag "gsm"
+            let net_host_connection_subtype_values_hsdpa: string<net_host_connection_type_values> =
+                UMX.tag "hsdpa"
+
+            let net_host_connection_subtype_values_hsupa: string<net_host_connection_type_values> =
+                UMX.tag "hsupa"
+
+            let net_host_connection_subtype_values_iden: string<net_host_connection_type_values> =
+                UMX.tag "iden"
+
+            let net_host_connection_subtype_values_ehrpd: string<net_host_connection_type_values> =
+                UMX.tag "ehrpd"
+
+            let net_host_connection_subtype_values_hspap: string<net_host_connection_type_values> =
+                UMX.tag "hspap"
+
+            let net_host_connection_subtype_values_gsm: string<net_host_connection_type_values> =
+                UMX.tag "gsm"
 
             let net_host_connection_subtype_values_td_scdma: string<net_host_connection_type_values> =
                 UMX.tag "td_scdma"
 
-            let net_host_connection_subtype_values_iwlan: string<net_host_connection_type_values> = UMX.tag "iwlan"
-            let net_host_connection_subtype_values_nr: string<net_host_connection_type_values> = UMX.tag "nr"
-            let net_host_connection_subtype_values_nrnsa: string<net_host_connection_type_values> = UMX.tag "nrnsa"
-            let net_host_connection_subtype_values_lte_ca: string<net_host_connection_type_values> = UMX.tag "lte_ca"
+            let net_host_connection_subtype_values_iwlan: string<net_host_connection_type_values> =
+                UMX.tag "iwlan"
+
+            let net_host_connection_subtype_values_nr: string<net_host_connection_type_values> =
+                UMX.tag "nr"
+
+            let net_host_connection_subtype_values_nrnsa: string<net_host_connection_type_values> =
+                UMX.tag "nrnsa"
+
+            let net_host_connection_subtype_values_lte_ca: string<net_host_connection_type_values> =
+                UMX.tag "lte_ca"
 
 
             /// The name of the mobile carrier.
@@ -231,6 +273,7 @@ module SemanticConventions =
             /// Required: No
             [<Literal>]
             let net_host_carrier_icc = "net.host.carrier.icc"
+
         /// This attribute may be used for any operation that accesses some remote service. Users can define what the name of a service is based on their particular semantics in their distributed system. Instrumentations SHOULD provide a way for users to configure this name.
         ///
         /// https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/span-general.md#general-remote-service-attributes
@@ -250,6 +293,7 @@ module SemanticConventions =
             /// Required: No
             [<Literal>]
             let peer_service = "peer.service"
+
         /// These attributes may be used for any operation with an authenticated and/or authorized enduser.
         ///
         /// https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/span-general.md#general-identity-attributes
@@ -284,6 +328,7 @@ module SemanticConventions =
             /// Required: No
             [<Literal>]
             let enduser_scope = "enduser.scope"
+
         /// These attributes may be used for any operation to store information about a thread that started a span.
         ///
         /// https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/span-general.md#general-thread-attributes
@@ -362,6 +407,7 @@ module SemanticConventions =
 
             [<Literal>]
             let exception_ = "exception"
+
             /// The type of the exception (its fully-qualified class name, if applicable). The dynamic type of the exception should be preferred over the static type in languages that support it.
             ///
             /// ValueType: string
@@ -371,6 +417,7 @@ module SemanticConventions =
             /// Required: No
             [<Literal>]
             let exception_type = "exception.type"
+
             /// The exception message.
             ///
             /// ValueType: string
@@ -380,6 +427,7 @@ module SemanticConventions =
             /// Required: No
             [<Literal>]
             let exception_message = "exception.message"
+
             /// A stacktrace as a string in the natural representation for the language runtime. The representation is to be determined and documented by each language SIG.
             ///
             /// ValueType: string
@@ -389,6 +437,7 @@ module SemanticConventions =
             /// Required: No
             [<Literal>]
             let exception_stacktrace = "exception.stacktrace"
+
             /// SHOULD be set to true if the exception event is recorded at a point where it is known that the exception is escaping the scope of the span.
             ///
             /// An exception is considered to have escaped (or left) the scope of a span, if that span is ended while the exception is still logically "in flight". This may be actually "in flight" in some languages (e.g. if the exception is passed to a Context manager's __exit__ method in Python) but will usually be caught at the point of recording the exception in most languages.
@@ -441,10 +490,7 @@ type ActivityExtensions =
     /// <param name="e"> object of <see cref="ActivityEvent"/> to add to the attached events list.</param>
     /// <returns><see langword="this" /> for convenient chaining.</returns>
     static member inline AddEventSafe(span: Activity, e: ActivityEvent) =
-        if Funcs.isNotNull span then
-            span.AddEvent(e)
-        else
-            span
+        if Funcs.isNotNull span then span.AddEvent(e) else span
 
     [<Extension>]
     /// <summary>
@@ -504,7 +550,10 @@ type ActivityExtensions =
             span: Activity,
             value: string<SemanticConventions.General.Network.net_host_connection_type_values>
         ) =
-        span.SetTagSafe(SemanticConventions.General.Network.net_host_connection_type, UMX.untag value)
+        span.SetTagSafe(
+            SemanticConventions.General.Network.net_host_connection_type,
+            UMX.untag value
+        )
 
     [<Extension>]
     static member inline SetNetworkNetHostConnectionSubType
@@ -512,7 +561,10 @@ type ActivityExtensions =
             span: Activity,
             value: string<SemanticConventions.General.Network.net_host_connection_subtype_values>
         ) =
-        span.SetTagSafe(SemanticConventions.General.Network.net_host_connection_subtype, UMX.untag value)
+        span.SetTagSafe(
+            SemanticConventions.General.Network.net_host_connection_subtype,
+            UMX.untag value
+        )
 
     [<Extension>]
     static member inline RecordExceptions(span: Activity, e: exn, ?escaped: bool) =
@@ -524,19 +576,32 @@ type ActivityExtensions =
 
             let tags =
                 ActivityTagsCollection(
-                    [ yield KeyValuePair(SemanticConventions.General.Exceptions.exception_escaped, box escaped)
-                      yield KeyValuePair(SemanticConventions.General.Exceptions.exception_type, box exceptionType)
-                      yield
-                          KeyValuePair(
-                              SemanticConventions.General.Exceptions.exception_stacktrace,
-                              box exceptionStackTrace
-                          )
-                      if not <| String.IsNullOrEmpty(exceptionMessage) then
-                          yield
-                              KeyValuePair(
-                                  SemanticConventions.General.Exceptions.exception_message,
-                                  box exceptionMessage
-                              ) ]
+                    [
+                        yield
+                            KeyValuePair(
+                                SemanticConventions.General.Exceptions.exception_escaped,
+                                box escaped
+                            )
+                        yield
+                            KeyValuePair(
+                                SemanticConventions.General.Exceptions.exception_type,
+                                box exceptionType
+                            )
+                        yield
+                            KeyValuePair(
+                                SemanticConventions.General.Exceptions.exception_stacktrace,
+                                box exceptionStackTrace
+                            )
+                        if
+                            not
+                            <| String.IsNullOrEmpty(exceptionMessage)
+                        then
+                            yield
+                                KeyValuePair(
+                                    SemanticConventions.General.Exceptions.exception_message,
+                                    box exceptionMessage
+                                )
+                    ]
                 )
 
             ActivityEvent(SemanticConventions.General.Exceptions.exception_, tags = tags)
@@ -562,12 +627,34 @@ type ActivitySourceExtensions =
             |> Seq.tryHead
             |> Option.defaultValue ""
 
-        let span = name |> tracer.StartActivity
+        let span =
+            name
+            |> tracer.StartActivity
 
         span
             .SetSourceCodeFilePath(path.Value)
             .SetSourceCodeLineNumber(line.Value)
             .SetSourceCodeNamespace(``namespace``)
+            .SetSourceCodeFunction(memberName.Value)
+
+    [<Extension>]
+    static member inline StartActivityForTypeAndFunc
+        (
+            tracer: ActivitySource,
+            ty: Type,
+            [<CallerMemberName>] ?memberName: string,
+            [<CallerFilePath>] ?path: string,
+            [<CallerLineNumberAttribute>] ?line: int
+        ) =
+
+        let span =
+            $"{ty.FullName}.{memberName.Value}"
+            |> tracer.StartActivity
+
+        span
+            .SetSourceCodeFilePath(path.Value)
+            .SetSourceCodeLineNumber(line.Value)
+            .SetSourceCodeNamespace(ty.FullName)
             .SetSourceCodeFunction(memberName.Value)
 
     [<Extension>]
