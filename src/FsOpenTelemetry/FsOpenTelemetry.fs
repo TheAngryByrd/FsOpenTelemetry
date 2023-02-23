@@ -4,6 +4,7 @@ open System
 open System.Diagnostics
 open System.Runtime.CompilerServices
 open System.Collections.Generic
+open Microsoft.FSharp.Quotations.Patterns
 
 
 // Thanks https://github.com/fsprojects/FSharp.UMX
@@ -11,7 +12,7 @@ open System.Collections.Generic
 type string<[<Measure>] 'm> = string
 
 
-module Funcs =
+module private Funcs =
     /// <summary>
     /// Determines whether the given value is not null.
     /// </summary>
@@ -452,6 +453,20 @@ module SemanticConventions =
             [<Literal>]
             let exception_escaped = "exception.escaped"
 
+module private SemanticHelpers =
+    let inline createSourceCodeTags
+        (filePath: string)
+        (codeLine: int)
+        (name_space: string)
+        (functionName: string)
+        =
+        seq {
+            SemanticConventions.General.SourceCode.code_filepath, box filePath
+            SemanticConventions.General.SourceCode.code_lineno, box codeLine
+            SemanticConventions.General.SourceCode.code_namespace, box name_space
+            SemanticConventions.General.SourceCode.code_function, box functionName
+        }
+
 [<Extension>]
 type ActivityExtensions =
     [<Extension>]
@@ -611,73 +626,195 @@ type ActivityExtensions =
 
 [<Extension>]
 type ActivitySourceExtensions =
+
+    /// <summary>Creates and starts a new System.Diagnostics.Activity object if there is any listener to the Activity events, returns null otherwise.</summary>
+    /// <param name="tracer">Provides APIs to create and start System.Diagnostics.Activity objects.</param>
+    /// <param name="name">The operation name of the Activity.</param>
+    /// <param name="name_space">The namespace where this code is located.</param>
+    /// <param name="activityKind">The System.Diagnostics.ActivityKind</param>
+    /// <param name="parentContext">The parent System.Diagnostics.ActivityContext object to initialize the created Activity object with.</param>
+    /// <param name="tags">The optional tags list to initialize the created Activity object with.</param>
+    /// <param name="links">The optional System.Diagnostics.ActivityLink list to initialize the created Activity object with.</param>
+    /// <param name="startTime">The optional start timestamp to set on the created Activity object.</param>
+    /// <param name="memberName">Uses CallerMemberName, should not be set unless you know what you're doing.</param>
+    /// <param name="path">Uses CallerFilePath, should not be set unless you know what you're doing.</param>
+    /// <param name="line">Uses CallerLineNumberAttribute, should not be set unless you know what you're doing.</param>
+    /// <returns>The created System.Diagnostics.Activity object or null if there is no any listener.</returns>
     [<Extension>]
-    static member inline StartActivityForName
+    static member inline StartActivityExt
         (
             tracer: ActivitySource,
-            name: string,
+            ?name: string,
+            ?name_space: string,
+            ?activityKind: ActivityKind,
+            ?parentContext: ActivityContext,
+            ?tags: IEnumerable<string * obj>,
+            ?links: IEnumerable<ActivityLink>,
+            ?startTime: DateTimeOffset,
             [<CallerMemberName>] ?memberName: string,
             [<CallerFilePath>] ?path: string,
             [<CallerLineNumberAttribute>] ?line: int
         ) =
-        let mi = Reflection.MethodBase.GetCurrentMethod()
 
-        let ``namespace`` =
-            mi.DeclaringType.FullName.Split("+")
-            |> Seq.tryHead
-            |> Option.defaultValue ""
+        let name_space =
+            name_space
+            |> Option.defaultWith (fun () ->
+                Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName.Split("+")
+                |> Seq.tryHead
+                |> Option.defaultValue ""
+            )
+
+
+        let kind = defaultArg activityKind ActivityKind.Internal
+
+        let tags =
+            seq {
+                yield!
+                    SemanticHelpers.createSourceCodeTags
+                        path.Value
+                        line.Value
+                        name_space
+                        memberName.Value
+
+                match tags with
+                | Some t -> yield! t
+                | None -> ()
+            }
+            |> Seq.map KeyValuePair
+
+        let name =
+            name
+            |> Option.defaultWith (fun () -> $"{name_space}.{memberName.Value}")
 
         let span =
-            name
-            |> tracer.StartActivity
+            tracer.StartActivity(
+                name = name,
+                kind = kind,
+                ?parentContext = parentContext,
+                tags = tags,
+                ?links = links,
+                ?startTime = startTime
+            )
 
         span
-            .SetSourceCodeFilePath(path.Value)
-            .SetSourceCodeLineNumber(line.Value)
-            .SetSourceCodeNamespace(``namespace``)
-            .SetSourceCodeFunction(memberName.Value)
 
+    /// <summary>This should be used by methods in classes. Creates and starts a new System.Diagnostics.Activity object if there is any listener to the Activity events, returns null otherwise.</summary>
+    /// <param name="tracer">Provides APIs to create and start System.Diagnostics.Activity objects.</param>
+    /// <param name="ty">The type where the trace is located.</param>
+    /// <param name="name_space">The namespace where this code is located.</param>
+    /// <param name="activityKind">The System.Diagnostics.ActivityKind</param>
+    /// <param name="parentContext">The parent System.Diagnostics.ActivityContext object to initialize the created Activity object with.</param>
+    /// <param name="tags">The optional tags list to initialize the created Activity object with.</param>
+    /// <param name="links">The optional System.Diagnostics.ActivityLink list to initialize the created Activity object with.</param>
+    /// <param name="startTime">The optional start timestamp to set on the created Activity object.</param>
+    /// <param name="memberName">Uses CallerMemberName, should not be set unless you know what you're doing.</param>
+    /// <param name="path">Uses CallerFilePath, should not be set unless you know what you're doing.</param>
+    /// <param name="line">Uses CallerLineNumberAttribute, should not be set unless you know what you're doing.</param>
+    /// <returns>The created System.Diagnostics.Activity object or null if there is no any listener.</returns>
     [<Extension>]
-    static member inline StartActivityForTypeAndFunc
+    static member inline StartActivityForType
         (
             tracer: ActivitySource,
             ty: Type,
+            ?activityKind: ActivityKind,
+            ?parentContext: ActivityContext,
+            ?tags: IEnumerable<string * obj>,
+            ?links: IEnumerable<ActivityLink>,
+            ?startTime: DateTimeOffset,
             [<CallerMemberName>] ?memberName: string,
             [<CallerFilePath>] ?path: string,
             [<CallerLineNumberAttribute>] ?line: int
         ) =
+        let name_space = ty.FullName
+        let name = $"{name_space}.{memberName.Value}"
 
-        let span =
-            $"{ty.FullName}.{memberName.Value}"
-            |> tracer.StartActivity
+        tracer.StartActivityExt(
+            name,
+            name_space = name_space,
+            ?activityKind = activityKind,
+            ?parentContext = parentContext,
+            ?tags = tags,
+            ?links = links,
+            ?startTime = startTime,
+            ?memberName = memberName,
+            ?path = path,
+            ?line = line
+        )
 
-        span
-            .SetSourceCodeFilePath(path.Value)
-            .SetSourceCodeLineNumber(line.Value)
-            .SetSourceCodeNamespace(ty.FullName)
-            .SetSourceCodeFunction(memberName.Value)
 
+    /// <summary>This should be used by methods in classes. Creates and starts a new System.Diagnostics.Activity object if there is any listener to the Activity events, returns null otherwise.</summary>
+    /// <param name="tracer">Provides APIs to create and start System.Diagnostics.Activity objects.</param>
+    /// <param name="activityKind">The System.Diagnostics.ActivityKind</param>
+    /// <param name="parentContext">The parent System.Diagnostics.ActivityContext object to initialize the created Activity object with.</param>
+    /// <param name="tags">The optional tags list to initialize the created Activity object with.</param>
+    /// <param name="links">The optional System.Diagnostics.ActivityLink list to initialize the created Activity object with.</param>
+    /// <param name="startTime">The optional start timestamp to set on the created Activity object.</param>
+    /// <param name="memberName">Uses CallerMemberName, should not be set unless you know what you're doing.</param>
+    /// <param name="path">Uses CallerFilePath, should not be set unless you know what you're doing.</param>
+    /// <param name="line">Uses CallerLineNumberAttribute, should not be set unless you know what you're doing.</param>
+    /// <typeparam name="'typAr">The type where the trace is located.</typeparam>
+    /// <returns>The created System.Diagnostics.Activity object or null if there is no any listener.</returns>
+    [<Extension>]
+    static member inline StartActivityForType<'typAr>
+        (
+            tracer: ActivitySource,
+            ?activityKind: ActivityKind,
+            ?parentContext: ActivityContext,
+            ?tags: IEnumerable<string * obj>,
+            ?links: IEnumerable<ActivityLink>,
+            ?startTime: DateTimeOffset,
+            [<CallerMemberName>] ?memberName: string,
+            [<CallerFilePath>] ?path: string,
+            [<CallerLineNumberAttribute>] ?line: int
+        ) =
+        let ty = typeof<'typAr>
+
+        tracer.StartActivityForType(
+            ty,
+            ?activityKind = activityKind,
+            ?parentContext = parentContext,
+            ?tags = tags,
+            ?links = links,
+            ?startTime = startTime,
+            ?memberName = memberName,
+            ?path = path,
+            ?line = line
+        )
+
+    /// <summary>This should be used by functions in modules. Creates and starts a new System.Diagnostics.Activity object if there is any listener to the Activity events, returns null otherwise.</summary>
+    /// <param name="tracer">Provides APIs to create and start System.Diagnostics.Activity objects.</param>
+    /// <param name="activityKind">The System.Diagnostics.ActivityKind</param>
+    /// <param name="parentContext">The parent System.Diagnostics.ActivityContext object to initialize the created Activity object with.</param>
+    /// <param name="tags">The optional tags list to initialize the created Activity object with.</param>
+    /// <param name="links">The optional System.Diagnostics.ActivityLink list to initialize the created Activity object with.</param>
+    /// <param name="startTime">The optional start timestamp to set on the created Activity object.</param>
+    /// <param name="memberName">Uses CallerMemberName, should not be set unless you know what you're doing.</param>
+    /// <param name="path">Uses CallerFilePath, should not be set unless you know what you're doing.</param>
+    /// <param name="line">Uses CallerLineNumberAttribute, should not be set unless you know what you're doing.</param>
+    /// <returns>The created System.Diagnostics.Activity object or null if there is no any listener.</returns>
     [<Extension>]
     static member inline StartActivityForFunc
         (
             tracer: ActivitySource,
+            ?activityKind: ActivityKind,
+            ?parentContext: ActivityContext,
+            ?tags: IEnumerable<string * obj>,
+            ?links: IEnumerable<ActivityLink>,
+            ?startTime: DateTimeOffset,
             [<CallerMemberName>] ?memberName: string,
             [<CallerFilePath>] ?path: string,
             [<CallerLineNumberAttribute>] ?line: int
         ) =
-        let mi = Reflection.MethodBase.GetCurrentMethod()
 
-        let ``namespace`` =
-            mi.DeclaringType.FullName.Split("+")
-            |> Seq.tryHead
-            |> Option.defaultValue ""
-
-        let span =
-            sprintf "%s.%s" ``namespace`` memberName.Value
-            |> tracer.StartActivity
-
-        span
-            .SetSourceCodeFilePath(path.Value)
-            .SetSourceCodeLineNumber(line.Value)
-            .SetSourceCodeNamespace(``namespace``)
-            .SetSourceCodeFunction(memberName.Value)
+        tracer.StartActivityExt(
+            ?name = None,
+            ?name_space = None,
+            ?activityKind = activityKind,
+            ?parentContext = parentContext,
+            ?tags = tags,
+            ?links = links,
+            ?startTime = startTime,
+            ?memberName = memberName,
+            ?path = path,
+            ?line = line
+        )
