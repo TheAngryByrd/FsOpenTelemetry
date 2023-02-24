@@ -581,6 +581,65 @@ type ActivityExtensions =
             UMX.untag value
         )
 
+
+    /// <summary>https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/exceptions.md#semantic-conventions-for-exceptions</summary>
+    /// <param name="span">The span to add the error information to</param>
+    /// <param name="errorMessage">The exception message.</param>
+    /// <param name="errorType">The type of the exception (its fully-qualified class name, if applicable). The dynamic type of the exception should be preferred over the static type in languages that support it.</param>
+    /// <param name="stacktrace">A stacktrace as a string in the natural representation for the language runtime. The representation is to be determined and documented by each language SIG.</param>
+    /// <param name="escaped">SHOULD be set to true if the exception event is recorded at a point where it is known that the exception is escaping the scope of the span. </param>
+    [<Extension>]
+    static member inline RecordError
+        (
+            span: Activity,
+            errorMessage: string,
+            errorType: string,
+            ?stacktrace: string,
+            ?escaped: bool
+        ) =
+        if Funcs.isNotNull span then
+            let escaped = defaultArg escaped false
+
+            let tags =
+                ActivityTagsCollection(
+                    [
+                        yield
+                            KeyValuePair(
+                                SemanticConventions.General.Exceptions.exception_escaped,
+                                box escaped
+                            )
+                        yield
+                            KeyValuePair(
+                                SemanticConventions.General.Exceptions.exception_type,
+                                box errorType
+                            )
+
+                        if Option.isSome stacktrace then
+                            yield
+                                KeyValuePair(
+                                    SemanticConventions.General.Exceptions.exception_stacktrace,
+                                    box stacktrace.Value
+                                )
+
+                        yield
+                            KeyValuePair(
+                                SemanticConventions.General.Exceptions.exception_message,
+                                box errorMessage
+                            )
+                    ]
+                )
+
+            ActivityEvent(SemanticConventions.General.Exceptions.exception_, tags = tags)
+            |> span.AddEvent
+        else
+            span
+
+    /// <summary>https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/exceptions.md#semantic-conventions-for-exceptions</summary>
+    /// <param name="span">The span to add the error information to</param>
+    /// <param name="errorMessage">The exception message.</param>
+    /// <param name="errorType">The type of the exception (its fully-qualified class name, if applicable). The dynamic type of the exception should be preferred over the static type in languages that support it.</param>
+    /// <param name="stacktrace">A stacktrace as a string in the natural representation for the language runtime. The representation is to be determined and documented by each language SIG.</param>
+    /// <param name="escaped">SHOULD be set to true if the exception event is recorded at a point where it is known that the exception is escaping the scope of the span. </param>
     [<Extension>]
     static member inline RecordExceptions(span: Activity, e: exn, ?escaped: bool) =
         if Funcs.isNotNull span then
