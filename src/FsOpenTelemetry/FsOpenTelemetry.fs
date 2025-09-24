@@ -818,12 +818,13 @@ type ActivitySourceExtensions =
         ) =
 
         let name_space =
-            name_space
-            |> Option.defaultWith (fun () ->
-                Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName.Split("+")
-                |> Seq.tryHead
-                |> Option.defaultValue ""
-            )
+            lazy
+                (name_space
+                 |> Option.defaultWith (fun () ->
+                     Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName.Split("+")
+                     |> Seq.tryHead
+                     |> Option.defaultValue ""
+                 ))
 
 
         let kind = defaultArg activityKind ActivityKind.Internal
@@ -834,7 +835,7 @@ type ActivitySourceExtensions =
                     SemanticHelpers.createSourceCodeTags
                         path.Value
                         line.Value
-                        name_space
+                        name_space.Value
                         memberName.Value
 
                 match tags with
@@ -845,7 +846,7 @@ type ActivitySourceExtensions =
 
         let name =
             name
-            |> Option.defaultWith (fun () -> $"{name_space}.{memberName.Value}")
+            |> Option.defaultWith (fun () -> $"%s{name_space.Value}.%s{memberName.Value}")
 
         let span =
             tracer.StartActivity(
@@ -928,10 +929,9 @@ type ActivitySourceExtensions =
             [<CallerFilePath>] ?path: string,
             [<CallerLineNumberAttribute>] ?line: int
         ) =
-        let ty = typeof<'typAr>
 
         tracer.StartActivityForType(
-            ty,
+            typeof<'typAr>,
             ?activityKind = activityKind,
             ?parentContext = parentContext,
             ?tags = tags,
