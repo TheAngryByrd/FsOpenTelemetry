@@ -251,6 +251,9 @@ module SemanticConventions =
             let network_connection_subtype_values_nrnsa: string<network_connection_subtype_values> =
                 UMX.tag "nrnsa"
 
+            let network_connection_subtype_values_lte: string<network_connection_subtype_values> =
+                UMX.tag "lte"
+
             let network_connection_subtype_values_lte_ca: string<network_connection_subtype_values> =
                 UMX.tag "lte_ca"
 
@@ -462,11 +465,11 @@ module SemanticConventions =
         ///
         /// https://opentelemetry.io/docs/specs/semconv/general/attributes/#source-code-attributes
         module SourceCode =
-            /// The method or function fully-qualified name without arguments.
+            /// The method or function name without arguments.
             ///
             /// ValueType: string
             ///
-            /// Examples: com.example.MyHttpService.serveRequest
+            /// Examples: serveRequest
             ///
             /// Required: No
             [<Literal>]
