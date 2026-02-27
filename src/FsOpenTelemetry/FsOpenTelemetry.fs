@@ -472,7 +472,7 @@ module SemanticConventions =
             [<Literal>]
             let code_function = "code.function.name"
 
-            /// The "namespace" within which code.function is defined. Usually the qualified class or module name, such that code.namespace + some separator + code.function form a unique identifier for the code unit.
+            /// The "namespace" within which code.function.name is defined. Usually the qualified class or module name, such that code.namespace + some separator + code.function.name form a unique identifier for the code unit.
             ///
             /// ValueType: string
             ///
@@ -492,7 +492,7 @@ module SemanticConventions =
             [<Literal>]
             let code_filepath = "code.file.path"
 
-            /// The line number in code.filepath best representing the operation. It SHOULD point within the code unit named in code.function.
+            /// The line number in code.file.path best representing the operation. It SHOULD point within the code unit named in code.function.name.
             ///
             /// ValueType: int
             ///
