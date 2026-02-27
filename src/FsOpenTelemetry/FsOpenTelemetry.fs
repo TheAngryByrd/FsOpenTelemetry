@@ -238,7 +238,8 @@ module SemanticConventions =
             let network_connection_subtype_values_gsm: string<network_connection_subtype_values> =
                 UMX.tag "gsm"
 
-            let network_connection_subtype_values_td_scdma: string<network_connection_subtype_values> =
+            let network_connection_subtype_values_td_scdma
+                : string<network_connection_subtype_values> =
                 UMX.tag "td_scdma"
 
             let network_connection_subtype_values_iwlan: string<network_connection_subtype_values> =
