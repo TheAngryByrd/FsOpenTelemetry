@@ -182,7 +182,7 @@ module SemanticConventions =
             ///
             /// ValueType: string
             ///
-            /// Examples: LTE
+            /// Examples: lte
             ///
             /// Required: No
             [<Literal>]
@@ -651,32 +651,32 @@ type ActivityExtensions =
         span.SetTagSafe(SemanticConventions.General.SourceCode.code_function, value)
 
     [<Extension>]
-    static member inline SetNetworkNetTransport
+    static member inline SetNetworkTransport
         (
             span: Activity,
-            value: string<SemanticConventions.General.Network.net_transport_values>
+            value: string<SemanticConventions.General.Network.network_transport_values>
         ) =
-        span.SetTagSafe(SemanticConventions.General.Network.net_transport, UMX.untag value)
+        span.SetTagSafe(SemanticConventions.General.Network.network_transport, UMX.untag value)
 
     [<Extension>]
-    static member inline SetNetworkNetHostConnectionType
+    static member inline SetNetworkConnectionType
         (
             span: Activity,
-            value: string<SemanticConventions.General.Network.net_host_connection_type_values>
+            value: string<SemanticConventions.General.Network.network_connection_type_values>
         ) =
         span.SetTagSafe(
-            SemanticConventions.General.Network.net_host_connection_type,
+            SemanticConventions.General.Network.network_connection_type,
             UMX.untag value
         )
 
     [<Extension>]
-    static member inline SetNetworkNetHostConnectionSubType
+    static member inline SetNetworkConnectionSubType
         (
             span: Activity,
-            value: string<SemanticConventions.General.Network.net_host_connection_subtype_values>
+            value: string<SemanticConventions.General.Network.network_connection_subtype_values>
         ) =
         span.SetTagSafe(
-            SemanticConventions.General.Network.net_host_connection_subtype,
+            SemanticConventions.General.Network.network_connection_subtype,
             UMX.untag value
         )
 
