@@ -33,108 +33,123 @@ type UMX =
     static member inline cast<[<Measure>] 'm1, [<Measure>] 'm2>(x: string<'m1>) : string<'m2> =
         Unsafe.cast x
 
-/// In OpenTelemetry spans can be created freely and it’s up to the implementor to annotate them with attributes specific to the represented operation. Spans represent specific operations in and between systems. Some of these operations represent calls that use well-known protocols like HTTP or database calls. Depending on the protocol and the type of operation, additional information is needed to represent and analyze a span correctly in monitoring systems. It is also important to unify how this attribution is made in different languages. This way, the operator will not need to learn specifics of a language and telemetry collected from polyglot (multi-language) micro-service environments can still be easily correlated and cross-analyzed.
+/// In OpenTelemetry spans can be created freely and it’s up to the implementer to annotate them with attributes specific to the represented operation. Spans represent specific operations in and between systems. Some of these operations represent calls that use well-known protocols like HTTP or database calls. Depending on the protocol and the type of operation, additional information is needed to represent and analyze a span correctly in monitoring systems. It is also important to unify how this attribution is made in different languages. This way, the operator will not need to learn specifics of a language and telemetry collected from polyglot (multi-language) micro-service environments can still be easily correlated and cross-analyzed.
 module SemanticConventions =
     /// The attributes described in this section are not specific to a particular operation but rather generic. They may be used in any Span they apply to. Particular operations may refer to or require some of these attributes.
     module General =
-        /// These attributes may be used for any network related operation. The net.peer.* attributes describe properties of the remote end of the network connection (usually the transport-layer peer, e.g. the node to which a TCP connection was established), while the net.host.* properties describe the local end. In an ideal situation, not accounting for proxies, multiple IP addresses or host names, the net.peer.* properties of a client are equal to the net.host.* properties of the server and vice versa.
+        /// These attributes may be used to describe the client and server in a connection-based network interaction and other network attributes.
         ///
-        /// https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/span-general.md#general-network-connection-attributes
+        /// https://opentelemetry.io/docs/specs/semconv/general/attributes/
         module Network =
-            /// Transport protocol used.
+            /// OSI transport layer or inter-process communication method.
             ///
             /// ValueType: string
             ///
-            /// Examples: ip_tcp
+            /// Examples: tcp; udp
             ///
-            /// Should use a net_transport_values
+            /// Should use a network_transport_values
             ///
             /// Required: No
             [<Literal>]
-            let net_transport = "net.transport"
+            let network_transport = "network.transport"
 
-            /// net.transport MUST be one of the following
+            /// network.transport MUST be one of the following
             [<Measure>]
-            type net_transport_values
+            type network_transport_values
 
-            /// tcp_ip
-            let net_transport_values_ip_tcp: string<net_transport_values> = UMX.tag "icp_tcp"
-            /// ip_udp
-            let net_transport_values_ip_udp: string<net_transport_values> = UMX.tag "ip_udp"
-            // /// Another IP-based protocol
-            let net_transport_values_ip: string<net_transport_values> = UMX.tag "ip"
-            /// Unix Domain socket.
-            let net_transport_values_unix: string<net_transport_values> = UMX.tag "unix"
-            // Named or anonymous pipe.
-            let net_transport_values_pipe: string<net_transport_values> = UMX.tag "pipe"
-            ///Signals that there is only in-process communication not using a "real" network protocol in cases where network attributes would normally be expected. Usually all other network attributes can be left out in that case.
-            let net_transport_values_inproc: string<net_transport_values> = UMX.tag "inproc"
-            /// Something else (non IP-based).
-            let net_transport_values_Other: string<net_transport_values> = UMX.tag "Other"
+            /// TCP
+            let network_transport_values_tcp: string<network_transport_values> = UMX.tag "tcp"
+            /// UDP
+            let network_transport_values_udp: string<network_transport_values> = UMX.tag "udp"
+            /// Named or anonymous pipe.
+            let network_transport_values_pipe: string<network_transport_values> = UMX.tag "pipe"
+            /// Unix domain socket.
+            let network_transport_values_unix: string<network_transport_values> = UMX.tag "unix"
+            /// QUIC
+            let network_transport_values_quic: string<network_transport_values> = UMX.tag "quic"
 
-            /// Remote address of the peer (dotted decimal for IPv4 or RFC5952 for IPv6)
+            /// Peer address of the network connection - IP address or Unix domain socket name.
             ///
             /// ValueType: string
             ///
-            /// Examples: 127.0.0.1
+            /// Examples: 10.1.2.80; /tmp/my.sock
             ///
             /// Required: No
             [<Literal>]
-            let net_peer_ip = "net.peer.ip"
+            let network_peer_address = "network.peer.address"
 
-            /// Remote port number.
+            /// Peer port number of the network connection.
             ///
             /// ValueType: int
             ///
-            /// Examples: 80; 8080; 443
+            /// Examples: 65123
             ///
             /// Required: No
             [<Literal>]
-            let net_peer_port = "net.peer.port"
+            let network_peer_port = "network.peer.port"
 
-            /// Remote hostname or similar.
+            /// Local address of the network connection - IP address or Unix domain socket name.
             ///
             /// ValueType: string
             ///
-            /// Examples: example.com
-            ///
-            /// Required: No
-            // TODO: "See Note below"
-            [<Literal>]
-            let net_peer_name = "net.peer.name"
-
-            /// Like net.peer.ip but for the host IP. Useful in case of a multi-IP host.
-            ///
-            /// ValueType: string
-            ///
-            /// Examples: example.com
+            /// Examples: 10.1.2.80; /tmp/my.sock
             ///
             /// Required: No
             [<Literal>]
-            let net_host_ip = "net.host.ip"
+            let network_local_address = "network.local.address"
 
-            /// Like net.peer.port but for the host port.
+            /// Local port number of the network connection.
             ///
             /// ValueType: int
             ///
-            /// Examples: 80; 8080; 443
+            /// Examples: 65123
             ///
             /// Required: No
             [<Literal>]
-            let net_host_port = "net.host.port"
+            let network_local_port = "network.local.port"
 
-            /// Local hostname or similar
+            /// OSI application layer or non-OSI equivalent.
             ///
             /// ValueType: string
             ///
-            /// Examples: localhost
+            /// Examples: amqp; http; mqtt
             ///
             /// Required: No
-            // TODO: "See Note below"
             [<Literal>]
-            let net_host_name = "net.host.name"
+            let network_protocol_name = "network.protocol.name"
 
-            /// The internet connection type currently being used by the host.
+            /// The actual version of the protocol used for network communication.
+            ///
+            /// ValueType: string
+            ///
+            /// Examples: 1.1; 2
+            ///
+            /// Required: No
+            [<Literal>]
+            let network_protocol_version = "network.protocol.version"
+
+            /// OSI network layer or non-OSI equivalent.
+            ///
+            /// ValueType: string
+            ///
+            /// Examples: ipv4; ipv6
+            ///
+            /// Should use a network_type_values
+            ///
+            /// Required: No
+            [<Literal>]
+            let network_type = "network.type"
+
+            /// network.type MUST be one of the following
+            [<Measure>]
+            type network_type_values
+
+            /// IPv4
+            let network_type_values_ipv4: string<network_type_values> = UMX.tag "ipv4"
+            /// IPv6
+            let network_type_values_ipv6: string<network_type_values> = UMX.tag "ipv6"
+
+            /// The internet connection type.
             ///
             /// ValueType: string
             ///
@@ -142,98 +157,101 @@ module SemanticConventions =
             ///
             /// Required: No
             [<Literal>]
-            let net_host_connection_type = "net.host.connection.type"
+            let network_connection_type = "network.connection.type"
 
-            /// net.host.connection.type MUST be one of the following or, if none of the listed values apply, a custom value:
+            /// network.connection.type MUST be one of the following or, if none of the listed values apply, a custom value:
             [<Measure>]
-            type net_host_connection_type_values
+            type network_connection_type_values
 
-            let net_host_connection_type_values_wifi: string<net_host_connection_type_values> =
+            let network_connection_type_values_wifi: string<network_connection_type_values> =
                 UMX.tag "wifi"
 
-            let net_host_connection_type_values_wired: string<net_host_connection_type_values> =
+            let network_connection_type_values_wired: string<network_connection_type_values> =
                 UMX.tag "wired"
 
-            let net_host_connection_type_values_cell: string<net_host_connection_type_values> =
+            let network_connection_type_values_cell: string<network_connection_type_values> =
                 UMX.tag "cell"
 
-            let net_host_connection_type_values_unavailable: string<net_host_connection_type_values> =
+            let network_connection_type_values_unavailable: string<network_connection_type_values> =
                 UMX.tag "unavailable"
 
-            let net_host_connection_type_values_unknown: string<net_host_connection_type_values> =
+            let network_connection_type_values_unknown: string<network_connection_type_values> =
                 UMX.tag "unknown"
-
 
             /// This describes more details regarding the connection.type. It may be the type of cell technology connection, but it could be used for describing details about a wifi connection.
             ///
             /// ValueType: string
             ///
-            /// Examples: lte
+            /// Examples: LTE
             ///
             /// Required: No
             [<Literal>]
-            let net_host_connection_subtype = "net.host.connection.subtype"
+            let network_connection_subtype = "network.connection.subtype"
 
-            /// net.host.connection.subtype MUST be one of the following or, if none of the listed values apply, a custom value:
+            /// network.connection.subtype MUST be one of the following or, if none of the listed values apply, a custom value:
             [<Measure>]
-            type net_host_connection_subtype_values
+            type network_connection_subtype_values
 
-
-            let net_host_connection_subtype_values_gprs: string<net_host_connection_type_values> =
+            let network_connection_subtype_values_gprs: string<network_connection_subtype_values> =
                 UMX.tag "gprs"
 
-            let net_host_connection_subtype_values_edge: string<net_host_connection_type_values> =
+            let network_connection_subtype_values_edge: string<network_connection_subtype_values> =
                 UMX.tag "edge"
 
-            let net_host_connection_subtype_values_umts: string<net_host_connection_type_values> =
+            let network_connection_subtype_values_umts: string<network_connection_subtype_values> =
                 UMX.tag "umts"
 
-            let net_host_connection_subtype_values_cdma: string<net_host_connection_type_values> =
+            let network_connection_subtype_values_cdma: string<network_connection_subtype_values> =
                 UMX.tag "cdma"
 
-            let net_host_connection_subtype_values_evdo_0: string<net_host_connection_type_values> =
+            let network_connection_subtype_values_evdo_0: string<network_connection_subtype_values> =
                 UMX.tag "evdo_0"
 
-            let net_host_connection_subtype_values_evdo_a: string<net_host_connection_type_values> =
+            let network_connection_subtype_values_evdo_a: string<network_connection_subtype_values> =
                 UMX.tag "evdo_a"
 
-            let net_host_connection_subtype_values_cdma2000_1xrtt
-                : string<net_host_connection_type_values> =
+            let network_connection_subtype_values_evdo_b: string<network_connection_subtype_values> =
+                UMX.tag "evdo_b"
+
+            let network_connection_subtype_values_cdma2000_1xrtt
+                : string<network_connection_subtype_values> =
                 UMX.tag "cdma2000_1xrtt"
 
-            let net_host_connection_subtype_values_hsdpa: string<net_host_connection_type_values> =
+            let network_connection_subtype_values_hsdpa: string<network_connection_subtype_values> =
                 UMX.tag "hsdpa"
 
-            let net_host_connection_subtype_values_hsupa: string<net_host_connection_type_values> =
+            let network_connection_subtype_values_hsupa: string<network_connection_subtype_values> =
                 UMX.tag "hsupa"
 
-            let net_host_connection_subtype_values_iden: string<net_host_connection_type_values> =
+            let network_connection_subtype_values_hspa: string<network_connection_subtype_values> =
+                UMX.tag "hspa"
+
+            let network_connection_subtype_values_iden: string<network_connection_subtype_values> =
                 UMX.tag "iden"
 
-            let net_host_connection_subtype_values_ehrpd: string<net_host_connection_type_values> =
+            let network_connection_subtype_values_ehrpd: string<network_connection_subtype_values> =
                 UMX.tag "ehrpd"
 
-            let net_host_connection_subtype_values_hspap: string<net_host_connection_type_values> =
+            let network_connection_subtype_values_hspap: string<network_connection_subtype_values> =
                 UMX.tag "hspap"
 
-            let net_host_connection_subtype_values_gsm: string<net_host_connection_type_values> =
+            let network_connection_subtype_values_gsm: string<network_connection_subtype_values> =
                 UMX.tag "gsm"
 
-            let net_host_connection_subtype_values_td_scdma: string<net_host_connection_type_values> =
+            let network_connection_subtype_values_td_scdma: string<network_connection_subtype_values> =
                 UMX.tag "td_scdma"
 
-            let net_host_connection_subtype_values_iwlan: string<net_host_connection_type_values> =
+            let network_connection_subtype_values_iwlan: string<network_connection_subtype_values> =
                 UMX.tag "iwlan"
 
-            let net_host_connection_subtype_values_nr: string<net_host_connection_type_values> =
+            let network_connection_subtype_values_nr: string<network_connection_subtype_values> =
                 UMX.tag "nr"
 
-            let net_host_connection_subtype_values_nrnsa: string<net_host_connection_type_values> =
+            let network_connection_subtype_values_nrnsa: string<network_connection_subtype_values> =
                 UMX.tag "nrnsa"
 
-            let net_host_connection_subtype_values_lte_ca: string<net_host_connection_type_values> =
+            let network_connection_subtype_values_lte_ca: string<network_connection_subtype_values> =
                 UMX.tag "lte_ca"
-
 
             /// The name of the mobile carrier.
             ///
@@ -243,7 +261,7 @@ module SemanticConventions =
             ///
             /// Required: No
             [<Literal>]
-            let net_host_carrier_name = "net.host.carrier.name"
+            let network_carrier_name = "network.carrier.name"
 
             /// The mobile carrier country code.
             ///
@@ -253,7 +271,7 @@ module SemanticConventions =
             ///
             /// Required: No
             [<Literal>]
-            let net_host_carrier_mcc = "net.host.carrier.mcc"
+            let network_carrier_mcc = "network.carrier.mcc"
 
             /// The mobile carrier network code.
             ///
@@ -263,7 +281,7 @@ module SemanticConventions =
             ///
             /// Required: No
             [<Literal>]
-            let net_host_carrier_mnc = "net.host.carrier.mnc"
+            let network_carrier_mnc = "network.carrier.mnc"
 
             /// The ISO 3166-1 alpha-2 2-character country code associated with the mobile carrier network.
             ///
@@ -273,34 +291,134 @@ module SemanticConventions =
             ///
             /// Required: No
             [<Literal>]
-            let net_host_carrier_icc = "net.host.carrier.icc"
+            let network_carrier_icc = "network.carrier.icc"
 
-        /// This attribute may be used for any operation that accesses some remote service. Users can define what the name of a service is based on their particular semantics in their distributed system. Instrumentations SHOULD provide a way for users to configure this name.
+        /// These attributes describe the server in a client-server connection.
         ///
-        /// https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/span-general.md#general-remote-service-attributes
-        module Remote =
-            /// The service.name of the remote service. SHOULD be equal to the actual service.name resource attribute of the remote service if any.
+        /// https://opentelemetry.io/docs/specs/semconv/general/attributes/#server-attributes
+        module Server =
+            /// Server domain name if available without reverse DNS lookup; otherwise, IP address or Unix domain socket name.
             ///
             /// ValueType: string
             ///
-            /// Examples: AuthTokenCache
-            ///
-            /// Examples of peer.service that users may specify:
-            ///
-            /// A Redis cache of auth tokens as peer.service="AuthTokenCache".
-            ///
-            /// A gRPC service rpc.service="io.opentelemetry.AuthService" may be hosted in both a gateway, peer.service="ExternalApiService" and a backend, peer.service="AuthService".
+            /// Examples: example.com; 10.1.2.80; /tmp/my.sock
             ///
             /// Required: No
             [<Literal>]
-            let peer_service = "peer.service"
+            let server_address = "server.address"
+
+            /// Server port number.
+            ///
+            /// ValueType: int
+            ///
+            /// Examples: 80; 8080; 443
+            ///
+            /// Required: No
+            [<Literal>]
+            let server_port = "server.port"
+
+        /// These attributes describe the client in a client-server connection.
+        ///
+        /// https://opentelemetry.io/docs/specs/semconv/general/attributes/#client-attributes
+        module Client =
+            /// Client address - domain name if available without reverse DNS lookup; otherwise, IP address or Unix domain socket name.
+            ///
+            /// ValueType: string
+            ///
+            /// Examples: client.example.com; 10.1.2.80; /tmp/my.sock
+            ///
+            /// Required: No
+            [<Literal>]
+            let client_address = "client.address"
+
+            /// Client port number.
+            ///
+            /// ValueType: int
+            ///
+            /// Examples: 65123
+            ///
+            /// Required: No
+            [<Literal>]
+            let client_port = "client.port"
+
+        /// These attributes describe the source in a network exchange/packet where there is no clear client/server relationship.
+        ///
+        /// https://opentelemetry.io/docs/specs/semconv/general/attributes/#source-and-destination-attributes
+        module Source =
+            /// Source address - domain name if available without reverse DNS lookup; otherwise, IP address or Unix domain socket name.
+            ///
+            /// ValueType: string
+            ///
+            /// Examples: source.example.com; 10.1.2.80; /tmp/my.sock
+            ///
+            /// Required: No
+            [<Literal>]
+            let source_address = "source.address"
+
+            /// Source port number.
+            ///
+            /// ValueType: int
+            ///
+            /// Examples: 3389; 2888
+            ///
+            /// Required: No
+            [<Literal>]
+            let source_port = "source.port"
+
+        /// These attributes describe the destination in a network exchange/packet where there is no clear client/server relationship.
+        ///
+        /// https://opentelemetry.io/docs/specs/semconv/general/attributes/#source-and-destination-attributes
+        module Destination =
+            /// Destination address - domain name if available without reverse DNS lookup; otherwise, IP address or Unix domain socket name.
+            ///
+            /// ValueType: string
+            ///
+            /// Examples: destination.example.com; 10.1.2.80; /tmp/my.sock
+            ///
+            /// Required: No
+            [<Literal>]
+            let destination_address = "destination.address"
+
+            /// Destination port number.
+            ///
+            /// ValueType: int
+            ///
+            /// Examples: 3389; 2888
+            ///
+            /// Required: No
+            [<Literal>]
+            let destination_port = "destination.port"
+
+        /// Attributes of the service.peer.* namespace may be used for any operation that accesses some remote service.
+        ///
+        /// https://opentelemetry.io/docs/specs/semconv/general/attributes/#general-remote-service-attributes
+        module Remote =
+            /// Logical name of the service on the other side of the connection. SHOULD be equal to the actual service.name resource attribute of the remote service if any.
+            ///
+            /// ValueType: string
+            ///
+            /// Examples: shoppingcart
+            ///
+            /// Required: No
+            [<Literal>]
+            let service_peer_name = "service.peer.name"
+
+            /// Logical namespace of the service on the other side of the connection. SHOULD be equal to the actual service.namespace resource attribute of the remote service if any.
+            ///
+            /// ValueType: string
+            ///
+            /// Examples: Shop
+            ///
+            /// Required: No
+            [<Literal>]
+            let service_peer_namespace = "service.peer.namespace"
 
         /// These attributes may be used for any operation with an authenticated and/or authorized enduser.
         ///
-        /// https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/span-general.md#general-identity-attributes
+        /// https://opentelemetry.io/docs/specs/semconv/general/attributes/
         module Identity =
 
-            /// Username or client_id extracted from the access token or Authorization header in the inbound request from outside the system.
+            /// Unique identifier of an end user in the system. It may be a username, email address, or other identifier.
             ///
             /// ValueType: string
             ///
@@ -310,29 +428,9 @@ module SemanticConventions =
             [<Literal>]
             let enduser_id = "enduser.id"
 
-            /// Actual/assumed role the client is making the request under extracted from token or application security context.
-            ///
-            /// ValueType: string
-            ///
-            /// Examples: admin
-            ///
-            /// Required: No
-            [<Literal>]
-            let enduser_role = "enduser.role"
-
-            /// Scopes or granted authorities the client currently possesses extracted from token or application security context. The value would come from the scope associated with an OAuth 2.0 Access Token or an attribute value in a SAML 2.0 Assertion.
-            ///
-            /// ValueType: string
-            ///
-            /// Examples: read:message, write:files
-            ///
-            /// Required: No
-            [<Literal>]
-            let enduser_scope = "enduser.scope"
-
         /// These attributes may be used for any operation to store information about a thread that started a span.
         ///
-        /// https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/span-general.md#general-thread-attributes
+        /// https://opentelemetry.io/docs/specs/semconv/general/attributes/#general-thread-attributes
         module Thread =
 
             /// Current "managed" thread ID (as opposed to OS thread ID).
@@ -361,17 +459,17 @@ module SemanticConventions =
 
         /// Often a span is closely tied to a certain unit of code that is logically responsible for handling the operation that the span describes (usually the method that starts the span). For an HTTP server span, this would be the function that handles the incoming request, for example. The attributes listed below allow to report this unit of code and therefore to provide more context about the span.
         ///
-        /// https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/span-general.md#source-code-attributes
+        /// https://opentelemetry.io/docs/specs/semconv/general/attributes/#source-code-attributes
         module SourceCode =
-            /// The method or function name, or equivalent (usually rightmost part of the code unit's name).
+            /// The method or function fully-qualified name without arguments.
             ///
             /// ValueType: string
             ///
-            /// Examples: serveRequest
+            /// Examples: com.example.MyHttpService.serveRequest
             ///
             /// Required: No
             [<Literal>]
-            let code_function = "code.function"
+            let code_function = "code.function.name"
 
             /// The "namespace" within which code.function is defined. Usually the qualified class or module name, such that code.namespace + some separator + code.function form a unique identifier for the code unit.
             ///
@@ -391,17 +489,17 @@ module SemanticConventions =
             ///
             /// Required: No
             [<Literal>]
-            let code_filepath = "code.filepath"
+            let code_filepath = "code.file.path"
 
             /// The line number in code.filepath best representing the operation. It SHOULD point within the code unit named in code.function.
             ///
-            /// ValueType: string
+            /// ValueType: int
             ///
             /// Examples: 42
             ///
             /// Required: No
             [<Literal>]
-            let code_lineno = "code.lineno"
+            let code_lineno = "code.line.number"
 
         module Exceptions =
 
