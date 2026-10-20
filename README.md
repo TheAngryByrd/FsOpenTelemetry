@@ -8,7 +8,11 @@ FsOpenTelemetry is a single file you can copy paste or add through [Paket Github
 
 One of the [best practices](https://docs.microsoft.com/en-us/dotnet/core/diagnostics/distributed-tracing-instrumentation-walkthroughs#best-practices-2) from the Microsoft Distributed Tracing documentation states to use the `?.` since "`activity` returned by `ActivitySource.StartActivity` may be null".  Since F# does not have this operator you have to put `if activity <> null then doThing` everywhere.  This uses extensions methods on an existing [Activity](https://docs.microsoft.com/en-us/dotnet/api/system.diagnostics.activity?view=net-6.0) so calls are straight forward without doing the null checks.
 
-This additionally adds several additional helpers such as [RecordException](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/api.md#record-exception), [Adding many of the semantic conventions as constants](https://github.com/open-telemetry/opentelemetry-specification/tree/main/specification/trace/semantic_conventions), and automatically creating `Activity` with [Source Code attributes](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/span-general.md#source-code-attributes) filled out.
+The library also provides [RecordException](https://opentelemetry.io/docs/specs/semconv/exceptions/) and constants for common attributes from [OpenTelemetry Semantic Conventions v1.44.0](https://github.com/open-telemetry/semantic-conventions/tree/v1.44.0/model). These constants cover HTTP, databases, messaging, .NET, URLs, errors, and resources. The catalogue includes stable and development attributes. It retains legacy keys and helpers for source compatibility.
+
+Source-code helpers retain the upstream behavior. They emit current file and line keys, an unqualified function name, and the legacy namespace attribute. Use the current `code_function_name`, `code_file_path`, and `code_line_number` constants with `SetTagSafe` for new instrumentation. The `code_function_name` value must contain the fully qualified function name.
+
+HTTP header constants are prefixes. Append a dot and the lowercase header name, such as `http.request.header.content-type`, and use a string-array value.
 
 ## How do I get started?
 

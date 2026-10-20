@@ -4,11 +4,13 @@
 
 ## What is FsOpenTelemetry?
 
-FsOpenTelemetry is a library that does this specific thing.  
+FsOpenTelemetry is a single-file F# library that provides safe helpers for `Activity` and `ActivitySource`, plus constants for common OpenTelemetry attributes.
 
 ## Why use FsOpenTelemetry?
 
-I created it because I had to solve an issue with this other thing.
+F# does not have the `?.` null-conditional operator. A span returned by `ActivitySource` can be null. FsOpenTelemetry provides extension methods that handle null spans.
+
+The attribute catalogue covers common HTTP, database, messaging, .NET, URL, error, and resource keys from [OpenTelemetry Semantic Conventions v1.44.0](https://github.com/open-telemetry/semantic-conventions/tree/v1.44.0/model). It includes stable and development attributes. Legacy keys and helpers remain available for source compatibility. Source-code helpers retain the upstream behavior. They emit current file and line keys, an unqualified function name, and the legacy namespace attribute.
 
 ---
 
