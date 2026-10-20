@@ -1,0 +1,18 @@
+<Project>
+  <PropertyGroup>
+    <_DotnetToolManifestFile>$(MSBuildThisFileDirectory).config/dotnet-tools.json</_DotnetToolManifestFile>
+    <_DotnetToolRestoreDirectory>$(MSBuildThisFileDirectory)build/obj/</_DotnetToolRestoreDirectory>
+    <_DotnetToolRestoreOutputFile>$(_DotnetToolRestoreDirectory)dotnet-tool-restore-$(MSBuildVersion)-$(OS)</_DotnetToolRestoreOutputFile>
+  </PropertyGroup>
+
+  <Target Name="ToolRestore"
+    Condition="'$(DesignTimeBuild)' != 'true'"
+    BeforeTargets="_LoadRestoreGraphEntryPoints;Build;Rebuild;Publish;PaketRestore;Restore;CollectPackageReferences"
+    Inputs="$(_DotnetToolManifestFile);$(MSBuildThisFileDirectory)global.json;$(MSBuildThisFileFullPath)"
+    Outputs="$(_DotnetToolRestoreOutputFile)">
+    <Exec Command="dotnet tool restore" WorkingDirectory="$(MSBuildThisFileDirectory)"
+      StandardOutputImportance="High" StandardErrorImportance="High" />
+    <MakeDir Directories="$(_DotnetToolRestoreDirectory)" />
+    <Touch Files="$(_DotnetToolRestoreOutputFile)" AlwaysCreate="True" ForceTouch="True" />
+  </Target>
+</Project>

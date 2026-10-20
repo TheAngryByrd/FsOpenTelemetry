@@ -645,6 +645,7 @@ module SemanticConventions =
 
             [<Literal>]
             let service_peer_namespace = "service.peer.namespace"
+
             /// The service.name of the remote service. SHOULD be equal to the actual service.name resource attribute of the remote service if any.
             ///
             /// ValueType: string
@@ -1114,7 +1115,8 @@ module SemanticConventions =
             let messaging_client_id = "messaging.client.id"
 
             [<Literal>]
-            let messaging_destination_subscription_name = "messaging.destination.subscription.name"
+            let messaging_destination_subscription_name =
+                "messaging.destination.subscription.name"
 
             [<Literal>]
             let messaging_message_envelope_size = "messaging.message.envelope.size"
@@ -1189,7 +1191,8 @@ module SemanticConventions =
             let aspnetcore_diagnostics_handler_type = "aspnetcore.diagnostics.handler.type"
 
             [<Literal>]
-            let aspnetcore_diagnostics_exception_result = "aspnetcore.diagnostics.exception.result"
+            let aspnetcore_diagnostics_exception_result =
+                "aspnetcore.diagnostics.exception.result"
 
             [<Literal>]
             let aspnetcore_rate_limiting_policy = "aspnetcore.rate_limiting.policy"

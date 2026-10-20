@@ -96,6 +96,10 @@ or
 $ ./build.sh  <optional buildtarget>// on unix
 ```
 
+Builds restore the pinned tools and run Fantomas before compilation. This can change source files. IDE design-time builds do not run these steps.
+
+The build scripts run `FormatCode` before `CheckFormatCode`. A formatting error stops the build.
+
 The bin of your library should look similar to:
 
 ```

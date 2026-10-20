@@ -602,11 +602,11 @@ let formatCode _ =
         |> Seq.collect id
         // Ignore AssemblyInfo
         |> Seq.filter(fun f -> f.EndsWith("AssemblyInfo.fs") |> not)
-        |> String.concat " "
+        |> Args.toWindowsCommandLine
         |> dotnet.fantomas
 
     if not result.OK then
-        printfn "Errors while formatting all files: %A" result.Messages
+        failwithf "Errors while formatting all files: %A" result.Messages
 
 let checkFormatCode _ =
     let result =
@@ -617,7 +617,7 @@ let checkFormatCode _ =
         |> Seq.collect id
         // Ignore AssemblyInfo
         |> Seq.filter(fun f -> f.EndsWith("AssemblyInfo.fs") |> not)
-        |> String.concat " "
+        |> Args.toWindowsCommandLine
         |> sprintf "%s --check"
         |> dotnet.fantomas
 
@@ -714,6 +714,7 @@ let initTargets () =
 
 
     "DotnetRestore"
+        ==> "FormatCode"
         ==> "CheckFormatCode"
         ==> "DotnetBuild"
         // ==> "FSharpAnalyzers"

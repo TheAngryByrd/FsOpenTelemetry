@@ -1,0 +1,23 @@
+<Project>
+  <Import Project="$(MSBuildThisFileDirectory)Directory.Solution.targets" />
+
+  <PropertyGroup>
+    <_DotnetFantomasOutputFile>$(BaseIntermediateOutputPath)$(MSBuildProjectName).dotnet-fantomas-$(NETCoreSdkVersion)-$(OS)</_DotnetFantomasOutputFile>
+  </PropertyGroup>
+
+  <Target Name="Format"
+    Condition="'$(MSBuildProjectExtension)' == '.fsproj' AND '$(DesignTimeBuild)' != 'true' AND '$(FormatOnBuild)' != 'false'"
+    DependsOnTargets="ToolRestore"
+    BeforeTargets="BeforeBuild"
+    Inputs="@(Compile);$(MSBuildThisFileDirectory).editorconfig;$(_DotnetToolManifestFile);$(MSBuildThisFileFullPath)"
+    Outputs="$(_DotnetFantomasOutputFile)">
+    <Exec Command="dotnet fantomas &quot;$(MSBuildProjectDirectory)&quot; --recurse"
+      WorkingDirectory="$(MSBuildThisFileDirectory)"
+      StandardOutputImportance="High" StandardErrorImportance="High" />
+    <MakeDir Directories="$(BaseIntermediateOutputPath)" />
+    <Touch Files="$(_DotnetFantomasOutputFile)" AlwaysCreate="True" ForceTouch="True" />
+    <ItemGroup>
+      <FileWrites Include="$(_DotnetFantomasOutputFile)" />
+    </ItemGroup>
+  </Target>
+</Project>
