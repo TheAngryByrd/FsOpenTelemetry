@@ -593,6 +593,12 @@ let githubRelease _ =
     |> GitHub.publishDraft
     |> Async.RunSynchronously
 
+// FAKE's DotNet.exec uses Args.fromWindowsCommandLine on Windows, Linux, and macOS.
+// The matching encoder preserves "/home/user/my project/File.fs" as one argument.
+// "Windows" names the quoting rules, not the OS; paths keep their original separators.
+// No Bash or Zsh shell parses this string, so shell quotes and shell escaping do not apply.
+let toProcessArgumentString args = Args.toWindowsCommandLine args
+
 let formatCode _ =
     let result =
         [
@@ -602,7 +608,7 @@ let formatCode _ =
         |> Seq.collect id
         // Ignore AssemblyInfo
         |> Seq.filter(fun f -> f.EndsWith("AssemblyInfo.fs") |> not)
-        |> Args.toWindowsCommandLine
+        |> toProcessArgumentString
         |> dotnet.fantomas
 
     if not result.OK then
@@ -617,7 +623,7 @@ let checkFormatCode _ =
         |> Seq.collect id
         // Ignore AssemblyInfo
         |> Seq.filter(fun f -> f.EndsWith("AssemblyInfo.fs") |> not)
-        |> Args.toWindowsCommandLine
+        |> toProcessArgumentString
         |> sprintf "%s --check"
         |> dotnet.fantomas
 
